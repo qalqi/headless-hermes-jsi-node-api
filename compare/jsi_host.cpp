@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   }
 
   auto runtimeConfig =
-      hermes::vm::RuntimeConfig::Builder().withIntl(false).build();
+      ::hermes::vm::RuntimeConfig::Builder().withIntl(false).build();
   auto runtime = facebook::hermes::makeHermesRuntime(runtimeConfig);
 
   runtime->global().setProperty(

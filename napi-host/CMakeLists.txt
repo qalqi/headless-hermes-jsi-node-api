@@ -57,6 +57,7 @@ target_include_directories(napi-host PRIVATE
     "${HERMES_SRC_DIR}/API"
     "${HERMES_SRC_DIR}/external/llvh/include"
     "${HERMES_BUILD_DIR}/external/llvh/include"
+    "${HERMES_BUILD_DIR}/lib/config" # libhermesvm-config.h, generated: the VM build flags (pointer compression, GC)
 )
 if (EXISTS "${HERMES_BUILD_DIR}/include")
     target_include_directories(napi-host PRIVATE "${HERMES_BUILD_DIR}/include")
