@@ -3,3 +3,5 @@ cmake-build*/
 .hermes/
 build/
 dist/
+napi-addons/rust/target/
+napi-addons/rust/Cargo.lock

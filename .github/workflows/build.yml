@@ -37,6 +37,9 @@ jobs:
       - name: List Hermes libraries
         run: find "$HERMES_BUILD_DIR" \( -name '*.a' -o -name '*.so' -o -name '*.dylib' \) -not -path '*/CMakeFiles/*' | sort | head -n 100
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Build the demos
         run: scripts/build.sh
 
