@@ -1,0 +1,3 @@
+sum(19, 23) = 42
+counter.add(5) = 15
+counter.add(27) = 42
