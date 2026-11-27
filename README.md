@@ -85,7 +85,7 @@ npx hermes script.js
 const hermes = require('@qalqi/headless-hermes');
 hermes.includeDir();   // headers (JSI, Hermes, Node-API) for building your own host
 hermes.libDir();       // libhermesvm
-hermes.bin('hermes'); // path to a tool
+hermes.bin('hermes');  // path to a tool
 hermes.buildInfo();    // the exact Hermes commit
 ```
 
