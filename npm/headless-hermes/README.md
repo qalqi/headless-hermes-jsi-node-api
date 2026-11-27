@@ -94,6 +94,48 @@ JavaScript, assert. The [repository](https://github.com/qalqi/headless-hermes-js
 host functions loaded from shared libraries, an event loop with `setTimeout` and microtasks, and a Node-API host that
 loads unmodified Node.js addons (C and [napi-rs](https://napi.rs/)) into Hermes.
 
+## Load your JSI library: no host code at all
+
+`hermes-jsi-run` is that host, ready-made: `console`, timers, microtasks, and an event loop your library's threads post
+results back to (`headless_hermes.h`, the job React Native's CallInvoker does in an app). Export one function:
+
+```cpp
+extern "C" void headless_hermes_register(facebook::jsi::Runtime &rt, const headless_hermes_host *host);
+```
+
+```console
+$ g++ -std=c++17 -shared -fPIC worker.cpp -I"$INC" -L"$LIB" -lhermesvm -o libworker.so
+$ npx hermes-jsi-run demo.js ./libworker.so
+add(2, 3) = 5
+script done; the loop keeps running while work is pending
+microtask before any timer
+awaited { a: 2, b: 4 } [ 6 ] Uint8Array(2) [ 2, 4 ]
+double(21) resolved on another thread: 42
+timer after 50 ms
+```
+
+`double()` resolves its Promise from a `std::thread`:
+[worker.cpp](https://github.com/qalqi/headless-hermes-jsi-node-api/blob/main/jsi-run/example/worker.cpp),
+[demo.js](https://github.com/qalqi/headless-hermes-jsi-node-api/blob/main/jsi-run/example/demo.js).
+
+## Node.js addons, on Hermes
+
+Hermes implements Node-API too. `napi-host` loads `.node` addons, unmodified (C, C++,
+[napi-rs](https://napi.rs/)), through a `require()` that resolves like Node's:
+
+```js
+// app.js
+const { hello, add } = require("../hello.node");
+console.log(hello(), "| add(20, 22) =", add(20, 22));
+```
+
+```console
+$ npx napi-host demo/app.js
+hello from Node-API | add(20, 22) = 42
+```
+
+Async work, thread-safe functions and Promises work: the host runs the event loop they need.
+
 ## What you get
 
 | Platform | Package (installed for you) |
@@ -102,14 +144,15 @@ loads unmodified Node.js addons (C and [napi-rs](https://napi.rs/)) into Hermes.
 | Linux arm64 | [`@qalqi/headless-hermes-linux-arm64`](https://www.npmjs.com/package/@qalqi/headless-hermes-linux-arm64) |
 | macOS arm64 | [`@qalqi/headless-hermes-darwin-arm64`](https://www.npmjs.com/package/@qalqi/headless-hermes-darwin-arm64) |
 
-Each has `bin/hermes`, `bin/hermesc`, `lib/libhermesvm` and `include/` (JSI, Hermes, Node-API). npm picks the one for
+Each has `bin/` (`hermes`, `hermesc`, `hermes-jsi-run`, `napi-host`), `lib/libhermesvm` and `include/` (JSI, Hermes,
+Node-API, `headless_hermes.h`). npm picks the one for
 your machine; you only ever install `@qalqi/headless-hermes`.
 
 ```js
 const hermes = require('@qalqi/headless-hermes');
 hermes.includeDir();     // headers
 hermes.libDir();         // libhermesvm
-hermes.bin('hermesc');   // path to a tool
+hermes.bin('napi-host'); // path to a tool
 hermes.buildInfo();      // the exact Hermes commit
 ```
 

@@ -36,7 +36,8 @@ In order of increasing complexity:
 | [host-functions](./host-functions) | JSI | registers C++ host functions in the global object |
 | [hf-runner](./hf-runner) | JSI | loads host functions from shared libraries given on the command line |
 | [evloop](./evloop) | JSI | a small event loop: `setTimeout`, `setImmediate`, microtasks, `WeakRef` |
-| [napi-host](./napi-host) | Node-API | standalone Node-API host with worker pool, `post_task`, timers and microtasks |
+| [jsi-run](./jsi-run) | JSI | `hermes-jsi-run`: a ready-made JSI host for your native libraries, with `console`, timers and an event loop other threads post results to (React Native's CallInvoker, headless) |
+| [napi-host](./napi-host) | Node-API | standalone Node-API host: `require()` for `.js`, `.json` and `.node`, `console`, worker pool, `post_task`, timers and microtasks |
 | [napi-addons/hello](./napi-addons/hello) | Node-API | C addon (headers only) exporting `hello()` and `add(a, b)` |
 | [napi-addons/async](./napi-addons/async) | Node-API | C addon using async work (`Promise`) and a thread-safe function from `pthread` |
 | [napi-addons/rust](./napi-addons/rust) | Node-API | minimal [napi-rs](https://napi.rs/) addon (`sum` and `Counter` class) loaded unmodified |
@@ -71,7 +72,8 @@ reported to the GC, async work and thread-safe functions need an event loop from
 ## Prebuilt Hermes
 
 The [prebuilt workflow](.github/workflows/release.yml) packages the pinned Hermes for Linux x64, Linux arm64 and macOS
-arm64: headers (JSI, Hermes, Node-API), the shared runtime (`libhermesvm`), the static libraries a Node-API host links, the
+arm64: headers (JSI, Hermes, Node-API, and the VM headers a Node-API host builds against), the shared runtime
+(`libhermesvm`), the static libraries a Node-API host links, the `hermes-jsi-run` and `napi-host` hosts, the
 `hermes` and `hermesc` tools, Hermes' license and the exact commit, with a SHA-256 checksum. Releases are published
 under [Releases](https://github.com/qalqi/headless-hermes-jsi-node-api/releases).
 
@@ -83,6 +85,8 @@ under [Releases](https://github.com/qalqi/headless-hermes-jsi-node-api/releases)
 ```sh
 npm i -D @qalqi/headless-hermes
 npx hermes script.js
+npx hermes-jsi-run script.js ./libmymodule.so     # your JSI library loaded into the runtime
+npx napi-host script.js                           # require() Node-API addons, unmodified
 ```
 
 ```js
@@ -95,7 +99,7 @@ hermes.buildInfo();    // the exact Hermes commit
 
 | Package | Contents |
 |---|---|
-| [`@qalqi/headless-hermes`](https://www.npmjs.com/package/@qalqi/headless-hermes) | the one to install: the `hermes` and `hermesc` commands and the paths above; pulls in your platform's package |
+| [`@qalqi/headless-hermes`](https://www.npmjs.com/package/@qalqi/headless-hermes) | the one to install: the `hermes`, `hermesc`, `hermes-jsi-run` and `napi-host` commands and the paths above; pulls in your platform's package |
 | [`@qalqi/headless-hermes-linux-x64`](https://www.npmjs.com/package/@qalqi/headless-hermes-linux-x64) | Linux x64: `include/`, `lib/libhermesvm.so`, `bin/` |
 | [`@qalqi/headless-hermes-linux-arm64`](https://www.npmjs.com/package/@qalqi/headless-hermes-linux-arm64) | Linux arm64: the same |
 | [`@qalqi/headless-hermes-darwin-arm64`](https://www.npmjs.com/package/@qalqi/headless-hermes-darwin-arm64) | macOS arm64: `include/`, `lib/libhermesvm.dylib`, `bin/` |

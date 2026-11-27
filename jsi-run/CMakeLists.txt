@@ -27,7 +27,7 @@ target_link_libraries(hermes-jsi-run PRIVATE ${HERMES_RUNTIME_LIB} ${HERMES_JSI_
 
 # The example library: add() and a Promise resolved from another thread.
 add_library(jsirunworker SHARED example/worker.cpp)
-target_include_directories(jsirunworker PRIVATE ${HERMES_INCLUDES})
+target_include_directories(jsirunworker PRIVATE ${HERMES_INCLUDES} "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(jsirunworker PRIVATE ${HERMES_RUNTIME_LIB} Threads::Threads)
 
 # Found next to it when packaged (bin/ and lib/ side by side), and in the Hermes build when run from here.

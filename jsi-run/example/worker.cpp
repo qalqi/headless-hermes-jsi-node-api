@@ -6,7 +6,7 @@
 
 #include <hermes/hermes.h>
 
-#include "../headless_hermes.h"
+#include "headless_hermes.h"  // in the prebuilt include/, or ../ in this repository
 
 using namespace facebook;
 
