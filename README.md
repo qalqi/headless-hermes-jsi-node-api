@@ -1,6 +1,7 @@
 # headless-hermes-jsi-node-api
 
 [![build](https://github.com/qalqi/headless-hermes-jsi-node-api/actions/workflows/build.yml/badge.svg)](https://github.com/qalqi/headless-hermes-jsi-node-api/actions/workflows/build.yml)
+[![npm](https://img.shields.io/npm/v/@qalqi/headless-hermes)](https://www.npmjs.com/package/@qalqi/headless-hermes)
 
 Run the [Hermes](https://github.com/facebook/hermes) JavaScript engine headless: no React Native, no app, no device.
 Each example embeds Hermes in a small native program, through **JSI** (the C++ API React Native uses) or through
@@ -70,14 +71,38 @@ arm64: headers (JSI, Hermes, Node-API), the shared runtime (`libhermesvm`), the 
 `hermes` and `hermesc` tools, Hermes' license and the exact commit, with a SHA-256 checksum. Releases are published
 under [Releases](https://github.com/qalqi/headless-hermes-jsi-node-api/releases).
 
-[`@qalqi/headless-hermes`](https://www.npmjs.com/package/@qalqi/headless-hermes) on npm installs the runtime
-library, the `hermes` and `hermesc` tools and the headers for your platform (the static libraries stay in the release
-archives):
+### npm
+
+[`@qalqi/headless-hermes`](https://www.npmjs.com/package/@qalqi/headless-hermes) installs the runtime library, the
+`hermes` and `hermesc` tools and the headers for your platform (the static libraries stay in the release archives):
 
 ```sh
 npm i -D @qalqi/headless-hermes
 npx hermes script.js
 ```
+
+```js
+const hermes = require('@qalqi/headless-hermes');
+hermes.includeDir();   // headers (JSI, Hermes, Node-API) for building your own host
+hermes.libDir();       // libhermesvm
+hermes.bin('hermes'); // path to a tool
+hermes.buildInfo();    // the exact Hermes commit
+```
+
+| Package | Contents |
+|---|---|
+| [`@qalqi/headless-hermes`](https://www.npmjs.com/package/@qalqi/headless-hermes) | the one to install: the `hermes` and `hermesc` commands and the paths above; pulls in your platform's package |
+| [`@qalqi/headless-hermes-linux-x64`](https://www.npmjs.com/package/@qalqi/headless-hermes-linux-x64) | Linux x64: `include/`, `lib/libhermesvm.so`, `bin/` |
+| [`@qalqi/headless-hermes-linux-arm64`](https://www.npmjs.com/package/@qalqi/headless-hermes-linux-arm64) | Linux arm64: the same |
+| [`@qalqi/headless-hermes-darwin-arm64`](https://www.npmjs.com/package/@qalqi/headless-hermes-darwin-arm64) | macOS arm64: `include/`, `lib/libhermesvm.dylib`, `bin/` |
+
+The platform packages are optional dependencies with `os` and `cpu` set, so npm installs only the one for your
+machine. Every version is published from the [release workflow](.github/workflows/release.yml) with npm provenance,
+which links each package to the run and commit that built it.
+
+Only need `hermesc` to compile bytecode for a React Native build? That's Meta's
+[`hermes-compiler`](https://www.npmjs.com/package/hermes-compiler); these packages are for running and embedding
+Hermes outside React Native.
 
 ### Versions
 
