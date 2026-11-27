@@ -1,6 +1,6 @@
 {
   "name": "@qalqi/headless-hermes",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Hermes JavaScript engine for headless use (no React Native): hermes and hermesc, hermes-jsi-run (a JSI host for native libraries) and napi-host (Node-API addons on Hermes), the runtime library and headers, prebuilt per platform",
   "license": "Apache-2.0",
   "repository": {

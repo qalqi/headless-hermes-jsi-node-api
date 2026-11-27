@@ -119,6 +119,7 @@ packaging change between releases even when Hermes doesn't. Each release names t
 
 | Release | Hermes (`static_h`) |
 |---|---|
+| 0.2.0 | [`d41288df`](https://github.com/facebook/hermes/commit/d41288df5432666c832abc2b2d8d53a14c1ec3de) (2026-11-26) |
 | 0.1.2 | [`d41288df`](https://github.com/facebook/hermes/commit/d41288df5432666c832abc2b2d8d53a14c1ec3de) (2026-11-26) |
 
 The same commit is in [`HERMES_COMMIT`](HERMES_COMMIT) at the release's tag, in `BUILD-INFO.txt` inside every archive,
