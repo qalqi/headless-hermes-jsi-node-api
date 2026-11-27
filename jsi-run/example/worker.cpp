@@ -31,7 +31,7 @@ extern "C" void headless_hermes_register(jsi::Runtime &rt, const headless_hermes
                   auto resolve = std::make_shared<jsi::Value>(rt, args[0]);
                   host->ref();
                   std::thread([host, x, resolve] {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(x)));  // x ms, so the order is fixed
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     double result = x * 2;  // the work, off the JavaScript thread
                     headless_hermes::post(host, [host, resolve, result](jsi::Runtime &rt) {
                       resolve->asObject(rt).asFunction(rt).call(rt, result);
