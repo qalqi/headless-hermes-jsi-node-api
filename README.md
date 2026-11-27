@@ -35,9 +35,13 @@ In order of increasing complexity:
 | [host-functions](./host-functions) | JSI | registers C++ host functions in the global object |
 | [hf-runner](./hf-runner) | JSI | loads host functions from shared libraries given on the command line |
 | [evloop](./evloop) | JSI | a small event loop: `setTimeout`, `setImmediate`, microtasks, `WeakRef` |
+| [napi-host](./napi-host) | Node-API | standalone Node-API host with worker pool, `post_task`, timers and microtasks |
+| [napi-addons/hello](./napi-addons/hello) | Node-API | C addon (headers only) exporting `hello()` and `add(a, b)` |
+| [napi-addons/async](./napi-addons/async) | Node-API | C addon using async work (`Promise`) and a thread-safe function from `pthread` |
+| [napi-addons/rust](./napi-addons/rust) | Node-API | minimal [napi-rs](https://napi.rs/) addon (`sum` and `Counter` class) loaded unmodified |
+| [compare](./compare) | JSI / Node-API | the same `add` host function implemented with JSI and with Node-API |
 
-Node-API examples (a host for unmodified Node-API addons, C and napi-rs addons, async work and thread-safe functions,
-and the same function written with JSI and with Node-API) are in progress.
+Building `napi-addons/rust` also requires Rust (`cargo`); all other examples only need CMake, Ninja and a C++17 compiler.
 
 ## Hermes version
 
