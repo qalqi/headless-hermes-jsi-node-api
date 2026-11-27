@@ -14,10 +14,10 @@ find_library(HERMES_RUNTIME_LIB NAMES hermesvm hermes
 find_library(HERMES_JSI_LIB NAMES jsi PATHS "${HERMES_BUILD_DIR}/jsi" NO_DEFAULT_PATH REQUIRED)
 find_package(Threads REQUIRED)
 
-# jslib.js, embedded as a C++ raw string literal.
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/jslib.js" JSLIB)
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/jslib.js.inc" "R\"JSLIB(${JSLIB})JSLIB\"\n")
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/jslib.js")
+# jslib.js and ../common/console.js, embedded as C++ raw string literals.
+include("${CMAKE_CURRENT_SOURCE_DIR}/../common/embed.cmake")
+embed_js("${CMAKE_CURRENT_SOURCE_DIR}/jslib.js" "${CMAKE_CURRENT_BINARY_DIR}/jslib.js.inc")
+embed_js("${CMAKE_CURRENT_SOURCE_DIR}/../common/console.js" "${CMAKE_CURRENT_BINARY_DIR}/console.js.inc")
 
 set(HERMES_INCLUDES "${HERMES_SRC_DIR}/API" "${HERMES_SRC_DIR}/API/jsi" "${HERMES_SRC_DIR}/public")
 

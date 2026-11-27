@@ -25,9 +25,12 @@ expect() {  # expect <name> <expected> <command...>
 expect "packaged hermes-jsi-run" jsi-run "$h/bin/hermes-jsi-run" "$root/jsi-run/example/demo.js" "$work/libworker.$so"
 "$CC" "${shared[@]}" "${addon_flags[@]}" -I"$h/include" "$root/napi-addons/hello/hello.c" -o "$work/hello.node"
 expect "packaged napi-host" napi-hello "$h/bin/napi-host" "$root/napi-addons/hello/demo.js" "$work/hello.node"
+expect "packaged napi-host: require" napi-require "$h/bin/napi-host" "$root/napi-host/require-demo/main.js" -- "$work/hello.node"
 
 # Built from the archive alone: hermes-jsi-run (JSI and libhermesvm) ...
-{ printf 'R"JSLIB('; cat "$root/jsi-run/jslib.js"; printf ')JSLIB"\n'; } > "$work/jslib.js.inc"
+embed() { { printf 'R"JSLIB('; cat "$1"; printf ')JSLIB"\n'; } > "$2"; }
+embed "$root/jsi-run/jslib.js" "$work/jslib.js.inc"
+embed "$root/common/console.js" "$work/console.js.inc"
 "$CXX" -std=c++17 "$root/jsi-run/jsi-run.cpp" -I"$h/include" -I"$work" -L"$h/lib" -lhermesvm -lpthread \
   -Wl,-rpath,"$h/lib" -o "$work/hermes-jsi-run"
 expect "hermes-jsi-run built from the archive" jsi-run "$work/hermes-jsi-run" "$root/jsi-run/example/demo.js" "$work/libworker.$so"
@@ -39,6 +42,7 @@ if [ "$(uname)" = Darwin ]; then
 else
   link=(-Wl,--whole-archive "${static[0]}" -Wl,--no-whole-archive "${static[@]:1}" -lpthread -ldl -lm)
 fi
-"$CXX" -std=c++17 -DNDEBUG -DNAPI_VERSION=10 "$root/napi-host/napi-host.cpp" -I"$h/include" "${exe_flags[@]}" "${link[@]}" -o "$work/napi-host"
+embed "$root/napi-host/prelude.js" "$work/prelude.js.inc"
+"$CXX" -std=c++17 -DNDEBUG -DNAPI_VERSION=10 "$root/napi-host/napi-host.cpp" -I"$h/include" -I"$work" "${exe_flags[@]}" "${link[@]}" -o "$work/napi-host"
 expect "napi-host built from the archive" napi-hello "$work/napi-host" "$root/napi-addons/hello/demo.js" "$work/hello.node"
 exit $failed

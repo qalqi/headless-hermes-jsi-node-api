@@ -15,11 +15,26 @@
 #include <thread>
 #include <vector>
 
+#include <climits>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "hermes/Public/RuntimeConfig.h"
 #include "hermes/VM/Runtime.h"
 #include "napi/hermes_napi.h"
 
 namespace {
+
+// common/console.js and prelude.js (require, process), embedded as C++ raw string literals.
+const char *kConsole =
+#include "console.js.inc"
+    ;
+const char *kPrelude =
+#include "prelude.js.inc"
+    ;
 
 std::optional<std::string> readFile(const char *path) {
   std::ifstream fileStream(path);
@@ -650,6 +665,143 @@ napi_value jsClearTimeout(napi_env env, napi_callback_info info) {
   return nullptr;
 }
 
+// The native helpers prelude.js and console.js call.
+std::string argString(napi_env env, napi_callback_info info, size_t i, napi_value *argvOut = nullptr) {
+  size_t argc = 4;
+  napi_value argv[4]{};
+  napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+  if (argvOut) {
+    for (size_t k = 0; k < 4; k++) argvOut[k] = argv[k];
+  }
+  return i < argc ? napiValueToUtf8(env, argv[i]) : std::string();
+}
+
+napi_value makeString(napi_env env, const std::string &s) {
+  napi_value v = nullptr;
+  napi_create_string_utf8(env, s.data(), s.size(), &v);
+  return v;
+}
+
+napi_value jsWrite(napi_env env, napi_callback_info info) {
+  napi_value argv[4]{};
+  std::string text = argString(env, info, 1, argv);
+  int32_t fd = 1;
+  napi_get_value_int32(env, argv[0], &fd);
+  std::cout.flush();
+  fwrite(text.data(), 1, text.size(), fd == 2 ? stderr : stdout);
+  fflush(fd == 2 ? stderr : stdout);
+  return nullptr;
+}
+
+napi_value jsReadFile(napi_env env, napi_callback_info info) {
+  std::string path = argString(env, info, 0);
+  std::ifstream in(path, std::ios::binary);
+  if (!in) {
+    napi_throw_error(env, "ENOENT", ("cannot read " + path).c_str());
+    return nullptr;
+  }
+  std::stringstream ss;
+  ss << in.rdbuf();
+  return makeString(env, ss.str());
+}
+
+napi_value jsStat(napi_env env, napi_callback_info info) {
+  std::string path = argString(env, info, 0);
+  struct stat st {};
+  int kind = stat(path.c_str(), &st) != 0 ? 0 : S_ISDIR(st.st_mode) ? 2 : 1;
+  napi_value v = nullptr;
+  napi_create_int32(env, kind, &v);
+  return v;
+}
+
+napi_value jsRealpath(napi_env env, napi_callback_info info) {
+  std::string path = argString(env, info, 0);
+  char buf[PATH_MAX];
+  return makeString(env, realpath(path.c_str(), buf) ? std::string(buf) : path);
+}
+
+napi_value jsCwd(napi_env env, napi_callback_info) {
+  char buf[PATH_MAX];
+  return makeString(env, getcwd(buf, sizeof buf) ? std::string(buf) : std::string("/"));
+}
+
+napi_value jsLoadAddon(napi_env env, napi_callback_info info) {
+  std::string path = argString(env, info, 0);
+  napi_value exports = nullptr;
+  if (hermes_napi_load_module(env, path.c_str(), &exports) != napi_ok) {
+    bool pending = false;
+    napi_is_exception_pending(env, &pending);
+    if (!pending) napi_throw_error(env, nullptr, ("cannot load the addon " + path).c_str());
+    return nullptr;
+  }
+  return exports;
+}
+
+/// compile(source, filename): the module's source wrapped in its CommonJS function, on the same first line so
+/// stack traces keep their line numbers.
+napi_value jsCompile(napi_env env, napi_callback_info info) {
+  std::string source = argString(env, info, 0);
+  std::string filename = argString(env, info, 1);
+  std::string wrapped = "(function (exports, require, module, __filename, __dirname) {" + source + "\n})";
+  hermes_run_script_flags flags{};
+  flags.struct_size = sizeof(flags);
+  napi_value result = nullptr;
+  if (hermes_run_script(env, reinterpret_cast<const uint8_t *>(wrapped.c_str()), wrapped.size() + 1, nullptr,
+                        nullptr, filename.c_str(), &flags, &result) != napi_ok) {
+    return nullptr;
+  }
+  return result;
+}
+
+/// Runs an embedded script that evaluates to a function, and calls it with `arg`; returns what it returns.
+napi_value callEmbedded(napi_env env, const char *source, const char *name, napi_value arg) {
+  hermes_run_script_flags flags{};
+  flags.struct_size = sizeof(flags);
+  napi_value fn = nullptr, global = nullptr, result = nullptr;
+  if (hermes_run_script(env, reinterpret_cast<const uint8_t *>(source), strlen(source) + 1, nullptr, nullptr, name,
+                        &flags, &fn) != napi_ok ||
+      napi_get_global(env, &global) != napi_ok ||
+      napi_call_function(env, global, fn, 1, &arg, &result) != napi_ok) {
+    return nullptr;
+  }
+  return result;
+}
+
+/// Installs console and process, and returns prelude.js's runMain.
+napi_value installPrelude(napi_env env, const std::vector<std::string> &args) {
+  napi_value native = nullptr, fn = nullptr, arr = nullptr;
+  napi_create_object(env, &native);
+  auto set = [&](const char *name, napi_callback cb) {
+    napi_create_function(env, name, NAPI_AUTO_LENGTH, cb, nullptr, &fn);
+    napi_set_named_property(env, native, name, fn);
+  };
+  set("write", jsWrite);
+  set("readFile", jsReadFile);
+  set("stat", jsStat);
+  set("realpath", jsRealpath);
+  set("cwd", jsCwd);
+  set("loadAddon", jsLoadAddon);
+  set("compile", jsCompile);
+#if defined(__APPLE__)
+  napi_set_named_property(env, native, "platform", makeString(env, "darwin"));
+#else
+  napi_set_named_property(env, native, "platform", makeString(env, "linux"));
+#endif
+#if defined(__aarch64__) || defined(__arm64__)
+  napi_set_named_property(env, native, "arch", makeString(env, "arm64"));
+#else
+  napi_set_named_property(env, native, "arch", makeString(env, "x64"));
+#endif
+  napi_create_array(env, &arr);
+  for (size_t i = 0; i < args.size(); i++) napi_set_element(env, arr, static_cast<uint32_t>(i), makeString(env, args[i]));
+  napi_set_named_property(env, native, "argv", arr);
+
+  napi_value write = nullptr;
+  napi_get_named_property(env, native, "write", &write);
+  if (!callEmbedded(env, kConsole, "napi-host:console.js", write)) return nullptr;
+  return callEmbedded(env, kPrelude, "napi-host:prelude.js", native);
+}
+
 bool registerHostGlobals(napi_env env, EventLoop &loop) {
   napi_handle_scope scope = nullptr;
   if (napi_open_handle_scope(env, &scope) != napi_ok) {
@@ -685,7 +837,7 @@ bool registerHostGlobals(napi_env env, EventLoop &loop) {
 
 int main(int argc, char **argv) {
   if (argc < 2) {
-    std::cerr << "Usage: " << argv[0] << " <script.js> [<addon.node> ...]\n";
+    std::cerr << "Usage: " << argv[0] << " <script.js> [<addon.node> ...] [-- <script arguments>]\n";
     return 1;
   }
 
@@ -712,7 +864,13 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  // Addons before "--" are loaded as globals; what follows "--" is the script's (process.argv).
+  int firstArg = argc;
   for (int i = 2; i < argc; ++i) {
+    if (std::string(argv[i]) == "--") {
+      firstArg = i + 1;
+      break;
+    }
     const char *addonPath = argv[i];
     napi_handle_scope scope = nullptr;
     if (napi_open_handle_scope(env, &scope) != napi_ok) {
@@ -749,19 +907,14 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-    hermes_run_script_flags rflags{};
-    rflags.struct_size = sizeof(rflags);
-    napi_value result = nullptr;
-    napi_status status = hermes_run_script(
-        env,
-        reinterpret_cast<const uint8_t *>(optCode->c_str()),
-        optCode->size() + 1,
-        nullptr,
-        nullptr,
-        scriptPath,
-        &rflags,
-        &result);
-    if (status != napi_ok) {
+    // The script runs as the main CommonJS module: require() resolves from its folder.
+    std::vector<std::string> args{argv[0], scriptPath};
+    for (int i = firstArg; i < argc; i++) args.emplace_back(argv[i]);
+    napi_value runMain = installPrelude(env, args);
+    napi_value global = nullptr, pathValue = nullptr, result = nullptr;
+    if (!runMain || napi_get_global(env, &global) != napi_ok ||
+        napi_create_string_utf8(env, scriptPath, NAPI_AUTO_LENGTH, &pathValue) != napi_ok ||
+        napi_call_function(env, global, runMain, 1, &pathValue, &result) != napi_ok) {
       printAndClearException(env);
       exitCode = 1;
     }

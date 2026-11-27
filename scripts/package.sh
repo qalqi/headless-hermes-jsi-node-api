@@ -30,6 +30,7 @@ headers "$src/include" hermes
 cp "$src"/API/napi/hermes_napi.h "$out/include/napi/"
 [ -f "$src/API/napi/hermes_napi_compile.h" ] && cp "$src/API/napi/hermes_napi_compile.h" "$out/include/napi/"
 headers "$src/external/llvh/include" llvh
+headers "$src/external/llvh/include" llvh-c
 headers "$src/external/llvh/gen/include" llvh
 [ -d "$build/external/llvh/include/llvh" ] && headers "$build/external/llvh/include" llvh
 cp "$build/lib/config/libhermesvm-config.h" "$out/include/"

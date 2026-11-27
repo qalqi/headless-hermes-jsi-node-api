@@ -1,0 +1,7 @@
+square(7) = 49
+config: { name: 'demo', retries: 3, tags: [ 'a', 'b' ] }
+hello, Hermes, from a package
+addon via require: hello from Node-API 5
+same module object twice: true
+platform known: true string string
+MODULE_NOT_FOUND

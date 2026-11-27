@@ -32,6 +32,9 @@
 
 using namespace facebook;
 
+static const char *kConsole =
+#include "console.js.inc"
+    ;
 static const char *kJslib =
 #include "jslib.js.inc"
     ;
@@ -120,10 +123,14 @@ int main(int argc, char **argv) {
           fwrite(text.data(), 1, text.size(), f);
           return jsi::Value::undefined();
         });
+    rt.evaluateJavaScript(std::make_shared<jsi::StringBuffer>(kConsole), "hermes-jsi-run:console.js")
+        .asObject(rt)
+        .asFunction(rt)
+        .call(rt, std::move(write));
     auto loop = rt.evaluateJavaScript(std::make_shared<jsi::StringBuffer>(kJslib), "hermes-jsi-run:jslib.js")
                     .asObject(rt)
                     .asFunction(rt)
-                    .call(rt, std::move(write))
+                    .call(rt)
                     .asObject(rt);
     auto peek = loop.getPropertyAsFunction(rt, "peek");
     auto run = loop.getPropertyAsFunction(rt, "run");

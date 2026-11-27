@@ -35,6 +35,8 @@ check          jsi-run        "$out/jsi-run/hermes-jsi-run" "$root/jsi-run/examp
 check          napi-host      "$out/napi-host/napi-host" "$root/napi-host/demo.js"
 check          napi-hello     "$out/napi-host/napi-host" "$root/napi-addons/hello/demo.js" \
                               "$out/napi-addons/hello/hello.node"
+check          napi-require   "$out/napi-host/napi-host" "$root/napi-host/require-demo/main.js" \
+                              -- "$out/napi-addons/hello/hello.node"
 check          napi-async     "$out/napi-host/napi-host" "$root/napi-addons/async/demo.js" \
                               "$out/napi-addons/async/async_addon.node"
 check          napi-rust      "$out/napi-host/napi-host" "$root/napi-addons/rust/demo.js" \
