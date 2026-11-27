@@ -4,3 +4,5 @@ cmake-build*/
 build/
 dist/
 npm/out/
+napi-addons/rust/target/
+napi-addons/rust/Cargo.lock

@@ -1,0 +1,2 @@
+hello from Node-API
+add(10, 32) = 42
