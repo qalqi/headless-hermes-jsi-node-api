@@ -1,0 +1,6 @@
+add(2, 3) = 5
+script done; the loop keeps running while work is pending
+microtask before any timer
+awaited { a: 2, b: 4 } [ 6 ] Uint8Array(2) [ 2, 4 ]
+double(21) resolved on another thread: 42
+timer after 50 ms

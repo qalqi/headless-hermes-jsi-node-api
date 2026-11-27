@@ -19,11 +19,11 @@ function platformPackageDir() {
 const dir = () => platformPackageDir();
 module.exports = {
   platformPackageDir,
-  /** Headers: include/jsi, include/hermes (hermes.h, Public/), include/hermes/napi (node_api.h), include/napi (hermes_napi.h). */
+  /** Headers: include/jsi, include/hermes (hermes.h, Public/), include/hermes/napi (node_api.h), include/napi (hermes_napi.h), include/headless_hermes.h. */
   includeDir: () => path.join(dir(), 'include'),
   /** The JSI runtime library (libhermesvm). */
   libDir: () => path.join(dir(), 'lib'),
-  /** A bundled tool: 'hermes' or 'hermesc'. */
+  /** A bundled tool: 'hermes', 'hermesc', 'hermes-jsi-run' or 'napi-host'. */
   bin: (name) => path.join(dir(), 'bin', name),
   /** The Hermes commit and build details. */
   buildInfo: () => require('fs').readFileSync(path.join(dir(), 'BUILD-INFO.txt'), 'utf8'),

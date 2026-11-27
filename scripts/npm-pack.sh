@@ -20,16 +20,20 @@ for archive in "$root"/dist/hermes-*.tar.gz; do
   mkdir -p "$pkg"
   tar -xzf "$archive" -C "$out"
   src="$out/$base"
-  cp -R "$src/include" "$pkg/"
-  mkdir -p "$pkg/lib" "$pkg/bin"
+  # JSI, hermes.h and its Public/ config, Node-API and headless_hermes.h; the VM and llvh headers a Node-API host
+  # builds against stay in the release archives with the static libraries they go with.
+  mkdir -p "$pkg/include/hermes" "$pkg/lib" "$pkg/bin"
+  cp -R "$src/include/jsi" "$src/include/napi" "$pkg/include/"
+  cp -R "$src/include/hermes/hermes.h" "$src/include/hermes/Public" "$src/include/hermes/napi" "$pkg/include/hermes/"
+  cp "$src/include/headless_hermes.h" "$pkg/include/"
   cp -P "$src"/lib/libhermesvm.* "$pkg/lib/" 2>/dev/null || cp -P "$src"/lib/libhermes.* "$pkg/lib/"
-  for t in hermes hermesc; do [ -f "$src/bin/$t" ] && cp "$src/bin/$t" "$pkg/bin/"; done
+  for t in hermes hermesc hermes-jsi-run napi-host; do [ -f "$src/bin/$t" ] && cp "$src/bin/$t" "$pkg/bin/"; done
   cp "$src/LICENSE" "$src/LICENSE-hermes" "$src/BUILD-INFO.txt" "$pkg/"
   cat > "$pkg/package.json" <<JSON
 {
   "name": "@qalqi/$name",
   "version": "$version",
-  "description": "Prebuilt Hermes ($npm_os-$arch) for @qalqi/headless-hermes: libhermesvm, hermes, hermesc, headers. Hermes commit $commit.",
+  "description": "Prebuilt Hermes ($npm_os-$arch) for @qalqi/headless-hermes: libhermesvm, hermes, hermesc, hermes-jsi-run, napi-host, headers. Hermes commit $commit.",
   "license": "Apache-2.0 AND MIT",
   "repository": { "type": "git", "url": "git+https://github.com/qalqi/headless-hermes-jsi-node-api.git" },
   "os": ["$npm_os"],

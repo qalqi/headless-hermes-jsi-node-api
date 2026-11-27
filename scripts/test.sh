@@ -29,9 +29,14 @@ check          host-functions "$out/host-functions/host-functions" "$root/host-f
 check          hf-runner      "$out/hf-runner/hf-runner" "$root/hf-runner/demo.js" \
                               "$out/hf-runner/libhfadd.$so" "$out/hf-runner/libhfmyprint.$so"
 check          evloop         "$out/evloop/evloop" "$root/evloop/timer.js"
+check          jsi-run-console "$out/jsi-run/hermes-jsi-run" "$root/jsi-run/example/console.js"
+check          jsi-run        "$out/jsi-run/hermes-jsi-run" "$root/jsi-run/example/demo.js" \
+                              "$out/jsi-run/libjsirunworker.$so"
 check          napi-host      "$out/napi-host/napi-host" "$root/napi-host/demo.js"
 check          napi-hello     "$out/napi-host/napi-host" "$root/napi-addons/hello/demo.js" \
                               "$out/napi-addons/hello/hello.node"
+check          napi-require   "$out/napi-host/napi-host" "$root/napi-host/require-demo/main.js" \
+                              -- "$out/napi-addons/hello/hello.node"
 check          napi-async     "$out/napi-host/napi-host" "$root/napi-addons/async/demo.js" \
                               "$out/napi-addons/async/async_addon.node"
 check          napi-rust      "$out/napi-host/napi-host" "$root/napi-addons/rust/demo.js" \

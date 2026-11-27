@@ -53,6 +53,11 @@ endif ()
 find_package(Threads REQUIRED)
 
 add_executable(napi-host napi-host.cpp)
+# ../common/console.js and prelude.js (require, process), embedded as C++ raw string literals.
+include("${CMAKE_CURRENT_SOURCE_DIR}/../common/embed.cmake")
+embed_js("${CMAKE_CURRENT_SOURCE_DIR}/../common/console.js" "${CMAKE_CURRENT_BINARY_DIR}/console.js.inc")
+embed_js("${CMAKE_CURRENT_SOURCE_DIR}/prelude.js" "${CMAKE_CURRENT_BINARY_DIR}/prelude.js.inc")
+target_include_directories(napi-host PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 target_include_directories(napi-host PRIVATE
     "${HERMES_SRC_DIR}/include"
