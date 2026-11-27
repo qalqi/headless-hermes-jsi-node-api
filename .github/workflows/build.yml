@@ -34,6 +34,9 @@ jobs:
       - name: Build Hermes (pinned in HERMES_COMMIT)
         run: scripts/build-hermes.sh
 
+      - name: List Hermes libraries
+        run: find "$HERMES_BUILD_DIR" \( -name '*.a' -o -name '*.so' -o -name '*.dylib' \) -not -path '*/CMakeFiles/*' | sort | head -n 100
+
       - name: Build the demos
         run: scripts/build.sh
 
