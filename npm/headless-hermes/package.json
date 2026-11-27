@@ -1,15 +1,38 @@
 {
   "name": "@qalqi/headless-hermes",
   "version": "0.1.2",
-  "description": "Hermes JavaScript engine for headless use (no React Native): the hermes and hermesc tools, the JSI runtime library and headers (JSI, Hermes, Node-API), prebuilt per platform",
+  "description": "Hermes JavaScript engine for headless use (no React Native): hermes and hermesc, hermes-jsi-run (a JSI host for native libraries) and napi-host (Node-API addons on Hermes), the runtime library and headers, prebuilt per platform",
   "license": "Apache-2.0",
-  "repository": { "type": "git", "url": "git+https://github.com/qalqi/headless-hermes-jsi-node-api.git" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qalqi/headless-hermes-jsi-node-api.git"
+  },
   "homepage": "https://github.com/qalqi/headless-hermes-jsi-node-api#readme",
-  "keywords": ["hermes", "jsi", "node-api", "napi", "headless", "javascript-engine", "react-native"],
+  "keywords": [
+    "hermes",
+    "jsi",
+    "node-api",
+    "napi",
+    "headless",
+    "javascript-engine",
+    "react-native"
+  ],
   "main": "index.js",
-  "bin": { "hermes": "bin/hermes.js", "hermesc": "bin/hermesc.js" },
-  "files": ["index.js", "bin/", "README.md", "LICENSE"],
-  "engines": { "node": ">=18" },
+  "bin": {
+    "hermes": "bin/hermes.js",
+    "hermesc": "bin/hermesc.js",
+    "hermes-jsi-run": "bin/hermes-jsi-run.js",
+    "napi-host": "bin/napi-host.js"
+  },
+  "files": [
+    "index.js",
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "optionalDependencies": {
     "@qalqi/headless-hermes-linux-x64": "0.1.0",
     "@qalqi/headless-hermes-linux-arm64": "0.1.0",

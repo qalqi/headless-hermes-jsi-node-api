@@ -31,6 +31,9 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = "Linux" ]; then sudo apt-get update -q && sudo apt-get install -y -q ninja-build; else brew install ninja; fi
 
+      - name: Install Rust (the napi-rs example)
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Cache the Hermes build
         uses: actions/cache@v4
         with:
@@ -40,15 +43,16 @@ jobs:
       - name: Build Hermes
         run: scripts/build-hermes.sh
 
+      - name: Build and test the examples and hosts (hermes-jsi-run and napi-host go into the archive)
+        run: |
+          scripts/build.sh
+          scripts/test.sh
+
       - name: Package
         run: scripts/package.sh
 
-      - name: Check the archive unpacks and the demos pass on this Hermes build
-        run: |
-          mkdir -p dist/check && tar -xzf dist/*.tar.gz -C dist/check
-          ls dist/check/*/include/jsi/jsi.h dist/check/*/include/hermes/napi/node_api.h dist/check/*/lib/libhermes*
-          scripts/build.sh
-          scripts/test.sh
+      - name: Check the archive on its own (its tools run; hosts and addons build from its include/ and lib/)
+        run: scripts/check-archive.sh dist/*.tar.gz
 
       - uses: actions/upload-artifact@v4
         with:

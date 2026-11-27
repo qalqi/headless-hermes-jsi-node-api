@@ -16,14 +16,24 @@ name="hermes-${commit:0:12}-$os-$arch"
 out="$dist/$name"
 rm -rf "$out" && mkdir -p "$out"/{include,lib,bin}
 
-# Headers: JSI, the Hermes JSI runtime and its public config, Node-API (the vendored headers and Hermes' host API).
-mkdir -p "$out/include/jsi" "$out/include/hermes/Public" "$out/include/hermes/napi" "$out/include/napi"
+# Headers. JSI and the Hermes JSI runtime (hermes.h, Public/), Node-API (the vendored node_api.h and Hermes' host API),
+# hermes-jsi-run's host API (headless_hermes.h); and, for building a Node-API host, which reaches into the VM
+# (hermes/VM/Runtime.h): Hermes' internal headers, llvh's (with its generated ones) and the VM's build flags.
+mkdir -p "$out/include/jsi" "$out/include/hermes/Public" "$out/include/napi" "$out/include/llvh"
 cp "$src"/API/jsi/jsi/*.h "$out/include/jsi/"
 cp "$src"/API/hermes/hermes.h "$out/include/hermes/"
 cp "$src"/public/hermes/Public/*.h "$out/include/hermes/Public/"
-cp "$src"/include/hermes/napi/*.h "$out/include/hermes/napi/"
+# Copy the header files (.h, .def, .inc) under $1/$2 to include/$2.
+headers() { ( cd "$1" && find "$2" -type f \( -name '*.h' -o -name '*.def' -o -name '*.inc' \) | while read -r h; do
+  mkdir -p "$out/include/$(dirname "$h")"; cp "$h" "$out/include/$h"; done ); }
+headers "$src/include" hermes
 cp "$src"/API/napi/hermes_napi.h "$out/include/napi/"
 [ -f "$src/API/napi/hermes_napi_compile.h" ] && cp "$src/API/napi/hermes_napi_compile.h" "$out/include/napi/"
+headers "$src/external/llvh/include" llvh
+headers "$src/external/llvh/gen/include" llvh
+[ -d "$build/external/llvh/include/llvh" ] && headers "$build/external/llvh/include" llvh
+cp "$build/lib/config/libhermesvm-config.h" "$out/include/"
+cp "$root/jsi-run/headless_hermes.h" "$out/include/"
 
 # Libraries: the shared JSI runtime and every static library the build produced (the Node-API host links these).
 # libhermesvm on Hermes' static_h branch (libhermes on older Hermes).
@@ -32,9 +42,13 @@ while IFS= read -r f; do cp -P "$f" "$out/lib/"; found_shared=1; done < <(find "
 [ "$found_shared" = 1 ] || { echo "neither libhermesvm.$so nor libhermes.$so found under $build" >&2; exit 1; }
 find "$build" -name '*.a' -not -path '*/CMakeFiles/*' -exec cp {} "$out/lib/" \;
 
-# Tools.
+# Tools: Hermes' own, and this repository's hosts when scripts/build.sh has built them.
+demos="${DEMOS_BUILD_DIR:-$root/build}"
 for t in hermes hermesc napi-runner; do
   [ -x "$build/bin/$t" ] && cp "$build/bin/$t" "$out/bin/"
+done
+for t in jsi-run/hermes-jsi-run napi-host/napi-host; do
+  [ -x "$demos/$t" ] && cp "$demos/$t" "$out/bin/"
 done
 
 # Licenses and provenance.

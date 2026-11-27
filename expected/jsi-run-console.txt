@@ -1,0 +1,5 @@
+Ada is 36 years extra
+[ 1, 'two', [ 3, [ 4, [Array] ] ] ] { a: { b: { c: [Object] } } } null undefined -0 10n
+Map(1) { 'k' => 1 } Set(2) { 1, 2 } [Function: named] [class K] Symbol(s)
+{ 'x-y': 1, z: "q'q" } [] {} Float64Array(1) [ 1.5 ]
+back\\slash [ 'a\\nb' ] an error message
