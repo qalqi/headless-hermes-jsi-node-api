@@ -56,6 +56,7 @@ target_include_directories(napi-host PRIVATE
     "${HERMES_SRC_DIR}/public"
     "${HERMES_SRC_DIR}/API"
     "${HERMES_SRC_DIR}/external/llvh/include"
+    "${HERMES_SRC_DIR}/external/llvh/gen/include" # pre-generated llvh headers (Attributes.inc)
     "${HERMES_BUILD_DIR}/external/llvh/include"
     "${HERMES_BUILD_DIR}/lib/config" # libhermesvm-config.h, generated: the VM build flags (pointer compression, GC)
 )
